@@ -1,0 +1,11 @@
+gleam_json (MoonBit-target fork)
+
+This project is a modified fork of gleam_json
+(https://github.com/gleam-lang/json), Copyright the Gleam contributors,
+licensed under the Apache License, Version 2.0 (see LICENCE).
+
+Modifications (made by the spiral-nights/gekko contributors) add MoonBit
+FFI bindings (`@external(moonbit, ...)` annotations and a `moonbit/`
+directory) so the package can be transpiled by gekko. All original upstream
+Gleam code remains under its original copyright and licence. Files modified
+from upstream carry a "Modified" note in their header.
