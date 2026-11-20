@@ -1,3 +1,5 @@
+// Modified for MoonBit target (gekko) — see NOTICE and LICENCE.
+
 import gleam/bit_array
 import gleam/dict.{type Dict}
 import gleam/dynamic.{type Dynamic}
@@ -7,6 +9,7 @@ import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string_tree.{type StringTree}
 
+/// @external_type(moonbit, "gleam_json_ffi", "Json")
 pub type Json
 
 pub type DecodeError {
@@ -62,8 +65,23 @@ fn do_parse(
   |> result.map_error(UnableToDecode)
 }
 
+// MoonBit fallback: `decode_string_raw` returns a tuple error instead of
+// `DecodeError` so `gleam_json_ffi` does not need to import `gleam_json`
+// (which would create a circular MoonBit package dependency).
 @external(javascript, "../gleam_json_ffi.mjs", "decode")
-fn decode_string(a: String) -> Result(Dynamic, DecodeError)
+fn decode_string(a: String) -> Result(Dynamic, DecodeError) {
+  case decode_string_raw(a) {
+    Ok(dyn) -> Ok(dyn)
+    Error(#(0, _)) -> Error(UnexpectedEndOfInput)
+    Error(#(1, s)) -> Error(UnexpectedByte(s))
+    Error(#(_, s)) -> Error(UnexpectedSequence(s))
+  }
+}
+
+/// @external(moonbit, "gleam_json_ffi", "decode_string")
+fn decode_string_raw(_a: String) -> Result(Dynamic, #(Int, String)) {
+  Error(#(0, ""))
+}
 
 /// Decode a JSON bit string into dynamically typed data which can be decoded
 /// into typed data with the `gleam/dynamic` module.
@@ -120,6 +138,7 @@ pub fn to_string(json: Json) -> String {
 
 @external(erlang, "gleam_json_ffi", "json_to_string")
 @external(javascript, "../gleam_json_ffi.mjs", "json_to_string")
+/// @external(moonbit, "gleam_json_ffi", "json_to_string")
 fn do_to_string(a: Json) -> String
 
 /// Convert a JSON value into a string tree.
@@ -137,7 +156,9 @@ fn do_to_string(a: Json) -> String
 ///
 @external(erlang, "gleam_json_ffi", "json_to_iodata")
 @external(javascript, "../gleam_json_ffi.mjs", "json_to_string")
-pub fn to_string_tree(json: Json) -> StringTree
+pub fn to_string_tree(json: Json) -> StringTree {
+  string_tree.from_string(do_to_string(json))
+}
 
 /// Encode a string into JSON, using normal JSON escaping.
 ///
@@ -154,6 +175,7 @@ pub fn string(input: String) -> Json {
 
 @external(erlang, "gleam_json_ffi", "string")
 @external(javascript, "../gleam_json_ffi.mjs", "identity")
+/// @external(moonbit, "gleam_json_ffi", "json_string")
 fn do_string(a: String) -> Json
 
 /// Encode a bool into JSON.
@@ -171,6 +193,7 @@ pub fn bool(input: Bool) -> Json {
 
 @external(erlang, "gleam_json_ffi", "bool")
 @external(javascript, "../gleam_json_ffi.mjs", "identity")
+/// @external(moonbit, "gleam_json_ffi", "json_bool")
 fn do_bool(a: Bool) -> Json
 
 /// Encode an int into JSON.
@@ -188,6 +211,7 @@ pub fn int(input: Int) -> Json {
 
 @external(erlang, "gleam_json_ffi", "int")
 @external(javascript, "../gleam_json_ffi.mjs", "identity")
+/// @external(moonbit, "gleam_json_ffi", "json_int")
 fn do_int(a: Int) -> Json
 
 /// Encode a float into JSON.
@@ -205,6 +229,7 @@ pub fn float(input: Float) -> Json {
 
 @external(erlang, "gleam_json_ffi", "float")
 @external(javascript, "../gleam_json_ffi.mjs", "identity")
+/// @external(moonbit, "gleam_json_ffi", "json_float")
 fn do_float(input input: Float) -> Json
 
 /// The JSON value null.
@@ -222,6 +247,7 @@ pub fn null() -> Json {
 
 @external(erlang, "gleam_json_ffi", "null")
 @external(javascript, "../gleam_json_ffi.mjs", "do_null")
+/// @external(moonbit, "gleam_json_ffi", "json_null")
 fn do_null() -> Json
 
 /// Encode an optional value into JSON, using null if it is the `None` variant.
@@ -263,6 +289,7 @@ pub fn object(entries: List(#(String, Json))) -> Json {
 
 @external(erlang, "gleam_json_ffi", "object")
 @external(javascript, "../gleam_json_ffi.mjs", "object")
+/// @external(moonbit, "gleam_json_ffi", "json_object")
 fn do_object(entries entries: List(#(String, Json))) -> Json
 
 /// Encode a list into a JSON array.
@@ -295,6 +322,7 @@ pub fn preprocessed_array(from: List(Json)) -> Json {
 
 @external(erlang, "gleam_json_ffi", "array")
 @external(javascript, "../gleam_json_ffi.mjs", "array")
+/// @external(moonbit, "gleam_json_ffi", "json_array")
 fn do_preprocessed_array(from from: List(Json)) -> Json
 
 /// Encode a Dict into a JSON object using the supplied functions to encode
