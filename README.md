@@ -1,5 +1,15 @@
 # json 🐑
 
+> **MoonBit / `gekko` Fork:** This is a modified fork of [`gleam-lang/json`](https://github.com/gleam-lang/json) for [`gekko`](https://github.com/spiral-nights/gekko) (see [`NOTICE`](./NOTICE) and [`LICENCE`](./LICENCE)). It preserves full Erlang and JavaScript compatibility while adding `/// @external(moonbit, ...)` pragmas and native MoonBit FFI bindings under `moonbit/gleam_json_ffi/`.
+>
+> Use it in a `gekko` target project's `gleam.toml`:
+>
+> ```toml
+> [dependencies]
+> gleam_stdlib = { git = "https://github.com/spiral-nights/gleam_stdlib.git", ref = "main" }
+> gleam_json = { git = "https://github.com/spiral-nights/gleam_json.git", ref = "main" }
+> ```
+
 Work with JSON in Gleam!
 
 ## Installation
